@@ -69,7 +69,7 @@ class TaskEntry extends Component {
   render({onEntry}) {
     return (
       <task-entry>
-        <input type="text" ref={el => this.inputEl = el} placeholder="Enter task..." />
+        <input type="text" ref={el => this.inputEl = el} placeholder="Enter task..." autofocus />
         <input type="number" ref={el => this.durationEl = el} defaultValue={5} min={1} />
         <select value="minutes">
           <option disabled>$$$ seconds $$$</option>
@@ -92,7 +92,7 @@ class Task extends Component {
         <duration-bar style={{width: `${duration / max * 100}%`}}></duration-bar>
         <info-line>
           <input type="checkbox" onChange={setTaskDone.bind(actionBase, task)} checked={done} />
-          <text autofocus tabindex={0}>{text}</text>
+          <text tabindex={0}>{text}</text>
           <duration>{duration} minutes</duration>
         </info-line>
       </task>
