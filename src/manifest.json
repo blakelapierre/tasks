@@ -1,6 +1,6 @@
 {
-  "name": "Preact PWA",
-  "short_name": "Preact PWA",
+  "name": "tasks.accountant",
+  "short_name": "tasks.accountant",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

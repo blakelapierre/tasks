@@ -8,7 +8,15 @@ export default class Home extends Component {
   }
 
   actions = {
-    setTaskDone(task, {target:{checked}}) {
+    addTask (text, duration) {
+      this.setState(this.actions.transforms.addTask.bind(this, text, duration));
+    },
+
+    updateTaskText (task, {target: {value}}) {
+      this.setState(this.actions.transforms.updateTaskText.bind(this, task, value));
+    },
+
+    setTaskDone (task, {target:{checked}}) {
       this.setState(this.actions.transforms.setTaskDone.bind(this, task, checked));
     },
 
@@ -17,6 +25,16 @@ export default class Home extends Component {
     },
 
     transforms: {
+      addTask(text, duration, state) {
+        state.tasks.push({text, duration});
+        state.tasks.forEach(task => task.duration > state.max ? state.max = task.duration : undefined);
+        state.tasks.sort((t1, t2) => t1.duration > t2.duration ? 1 : -1);
+      },
+
+      updateTaskText(task, text, state) {
+        task.text = text;
+      },
+
       setTaskDone(task, checked, state) {
         task.done = checked;
 
@@ -36,19 +54,11 @@ export default class Home extends Component {
     }
   }
 
-  addTask (text, duration) {
-    this.setState(state => {
-      state.tasks.push({text, duration});
-      state.tasks.forEach(task => task.duration > state.max ? state.max = task.duration : undefined);
-      state.tasks.sort((t1,t2)=>t1.duration>t2.duration?1:-1);
-    });
-  }
-
   render({}, {tasks, max}) {
     return (
       <home>
         <TaskList tasks={tasks} max={max} actions={this.actions} actionBase={this} />
-        <TaskEntry onEntry={this.addTask.bind(this)} />
+        <TaskEntry onEntry={this.actions.addTask.bind(this)} />
       </home>
     );
   }
@@ -98,14 +108,25 @@ class TaskEntry extends Component {
 }
 
 class Task extends Component {
-  render({task, max, actions: {setTaskDone}, actionBase}) {
+  state = {
+    editMode: false
+  }
+
+  toggleEditMode() {
+    this.setState(({editMode}) => ({editMode: !editMode}));
+  }
+
+  render({task, max, actions: {setTaskDone, updateTaskText}, actionBase}, {editMode}) {
     const {text, duration, done} = task;
     return (
       <task className={done ? style['done'] : ''}>
         <duration-bar style={{width: `${duration / max * 100}%`}}></duration-bar>
         <info-line>
           <input type="checkbox" onChange={setTaskDone.bind(actionBase, task)} checked={done} />
-          <text tabindex={0}>{text}</text>
+          {editMode ?
+              <input type="text" value={text} onBlur={event => updateTaskText.call(actionBase, task, event) & this.setState({editMode: false})} />
+            : <task-text onClick={this.toggleEditMode.bind(this)}>{text}</task-text>
+          }
           <duration>{duration} minutes</duration>
         </info-line>
       </task>
