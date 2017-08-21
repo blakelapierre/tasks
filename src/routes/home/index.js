@@ -100,7 +100,6 @@ class TaskEntry extends Component {
 class Task extends Component {
   render({task, max, actions: {setTaskDone}, actionBase}) {
     const {text, duration, done} = task;
-    console.log(duration, max);
     return (
       <task className={done ? style['done'] : ''}>
         <duration-bar style={{width: `${duration / max * 100}%`}}></duration-bar>
