@@ -66,13 +66,23 @@ class TaskList extends Component {
 }
 
 class TaskEntry extends Component {
+  buttonClick(onEntry) {
+    onEntry(this.inputEl.value, parseFloat(this.durationEl.value));
+    this.inputEl.value = '';
+    this.inputEl.focus();
+  }
+
+  inputKeydown(onEntry, event) {
+    if (event.keyCode === 13) this.buttonClick(onEntry);
+  }
+
   render({onEntry}) {
     return (
       <task-entry>
         <task-input>
-          <input type="text" ref={el => this.inputEl = el} placeholder="Enter task..." autofocus tabindex={0} />
+          <input type="text" ref={el => this.inputEl = el} placeholder="Enter task..." autofocus tabindex={0} onKeydown={this.inputKeydown.bind(this, onEntry)} />
           <duration-input>
-            <input type="number" ref={el => this.durationEl = el} defaultValue={5} min={1} />
+            <input type="number" ref={el => this.durationEl = el} defaultValue={5} min={1} onKeydown={this.inputKeydown.bind(this, onEntry)} />
             <select value="minute(s)">
               <option disabled>$$$ second(s) $$$</option>
               <option>minute(s)</option>
@@ -81,7 +91,7 @@ class TaskEntry extends Component {
             </select>
           </duration-input>
         </task-input>
-        <button onClick={() => onEntry(this.inputEl.value, parseFloat(this.durationEl.value)) & (this.inputEl.value = '') & this.inputEl.focus()}>+</button>
+        <button onClick={this.buttonClick.bind(this, onEntry)}>+</button>
       </task-entry>
     );
   }
