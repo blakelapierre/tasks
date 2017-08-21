@@ -69,14 +69,18 @@ class TaskEntry extends Component {
   render({onEntry}) {
     return (
       <task-entry>
-        <input type="text" ref={el => this.inputEl = el} placeholder="Enter task..." autofocus />
-        <input type="number" ref={el => this.durationEl = el} defaultValue={5} min={1} />
-        <select value="minutes">
-          <option disabled>$$$ seconds $$$</option>
-          <option>minutes</option>
-          <option disabled>$$$ hours $$$</option>
-          <option disabled>$$$ days $$$</option>
-        </select>
+        <task-input>
+          <input type="text" ref={el => this.inputEl = el} placeholder="Enter task..." autofocus tabindex={0} />
+          <duration-input>
+            <input type="number" ref={el => this.durationEl = el} defaultValue={5} min={1} />
+            <select value="minute(s)">
+              <option disabled>$$$ second(s) $$$</option>
+              <option>minute(s)</option>
+              <option disabled>$$$ hour(s) $$$</option>
+              <option disabled>$$$ days(s) $$$</option>
+            </select>
+          </duration-input>
+        </task-input>
         <button onClick={() => onEntry(this.inputEl.value, parseFloat(this.durationEl.value)) & (this.inputEl.value = '') & this.inputEl.focus()}>+</button>
       </task-entry>
     );

@@ -67,6 +67,23 @@ home {
     align-items: center;
     justify-content: center;
 
+    task-input {
+      .flex-column();
+
+      duration-input {
+        display: flex;
+
+        align-items: stretch;
+
+        select {
+          flex: 1 1 auto;
+
+          border: solid 1px #999;
+          // background-color: transparent;
+        }
+      }
+    }
+
     input[type=number] {
       width: 3em;
 
@@ -74,23 +91,27 @@ home {
     }
 
     button {
-      margin: 0;
+      margin: 0.1em;
       // padding: 0;
 
-      background-color: transparent;
+      width: 1.5em;
 
-      border: solid 1px #aaa;
+      background-color: transparent;
+      color: #999;
+
+      font-size: 1.5em;
+      line-height: 1.5em;
+
+      border: none;
 
       font-weight: bold;
 
       cursor: pointer;
 
       &:hover {
-        background-color: #000;
+        background-color: #999;
 
         color: #fff;
-
-        border: solid 1px #fff;
       }
     }
   }
