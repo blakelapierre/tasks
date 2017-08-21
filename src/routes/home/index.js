@@ -2,33 +2,54 @@ import { h, Component } from 'preact';
 import style from './style';
 
 export default class Home extends Component {
-  state = {
+  state = JSON.parse(localStorage['state'] || '0') || {
     tasks: [],
-    max: 0
+    max: 0,
+    taskID: 0
+  }
+
+  saveState() {
+    localStorage['state'] = JSON.stringify(this.state);
   }
 
   actions = {
     addTask (text, duration) {
       this.setState(this.actions.transforms.addTask.bind(this, text, duration));
+      this.saveState();
     },
 
     updateTaskText (task, {target: {value}}) {
       this.setState(this.actions.transforms.updateTaskText.bind(this, task, value));
+      this.saveState();
     },
 
     setTaskDone (task, {target:{checked}}) {
       this.setState(this.actions.transforms.setTaskDone.bind(this, task, checked));
+      this.saveState();
     },
 
     remove (task) {
       this.setState(this.actions.transforms.removeTask.bind(this, task));
+      this.saveState();
     },
 
     transforms: {
       addTask(text, duration, state) {
-        state.tasks.push({text, duration});
-        state.tasks.forEach(task => task.duration > state.max ? state.max = task.duration : undefined);
-        state.tasks.sort((t1, t2) => t1.duration > t2.duration ? 1 : -1);
+        const id = state.taskID++;
+
+        insertByDuration(state.tasks, {id, text, duration}, duration);
+
+        function insertByDuration(tasks, task, duration) {
+          for (let i = 0; i < tasks.length; i++) {
+            if (duration < tasks[i].duration) {
+              tasks.splice(i, 0, task);
+              return;
+            }
+          }
+          tasks.push(task);
+        }
+
+        if (duration > state.max) state.max = duration;
       },
 
       updateTaskText(task, text, state) {
@@ -69,7 +90,7 @@ class TaskList extends Component {
   render({tasks, max, actions, actionBase}) {
     return (
       <task-list>
-        {tasks.map(t => <Task task={t} max={max} actions={actions} actionBase={actionBase} onClick={() => console.log(t)} />)}
+        {tasks.map(t => <Task key={t.id} task={t} max={max} actions={actions} actionBase={actionBase} onClick={() => console.log(t)} />)}
       </task-list>
     );
   }
