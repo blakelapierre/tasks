@@ -51,7 +51,7 @@ export default class Home extends Component {
       addTask(text, estimate, state) {
         const id = state.taskID++;
 
-        insertByEstimate(state.tasks, {id, text, estimate}, estimate);
+        insertByEstimate(state.tasks, {id, text, estimate, created: new Date().getTime()}, estimate);
 
         if (estimate > state.max) state.max = estimate;
 
