@@ -13,13 +13,27 @@ export default class Home extends Component {
   }
 
   actions = {
-    addTask (text, duration) {
-      this.setState(this.actions.transforms.addTask.bind(this, text, duration));
+    addTask (text, estimate) {
+      this.setState(this.actions.transforms.addTask.bind(this, text, estimate));
       this.saveState();
     },
 
     updateTaskText (task, {target: {value}}) {
       this.setState(this.actions.transforms.updateTaskText.bind(this, task, value));
+      this.saveState();
+    },
+
+    toggleTask (task) {
+      (task.work && task.work[task.work.length - 1].length === 1 ? this.actions.stopTask : this.actions.startTask).call(this, task);
+    },
+
+    startTask (task) {
+      this.setState(this.actions.transforms.startTask.bind(this, task));
+      this.saveState();
+    },
+
+    stopTask (task) {
+      this.setState(this.actions.transforms.stopTask.bind(this, task));
       this.saveState();
     },
 
@@ -34,26 +48,40 @@ export default class Home extends Component {
     },
 
     transforms: {
-      addTask(text, duration, state) {
+      addTask(text, estimate, state) {
         const id = state.taskID++;
 
-        insertByDuration(state.tasks, {id, text, duration}, duration);
+        insertByEstimate(state.tasks, {id, text, estimate}, estimate);
 
-        function insertByDuration(tasks, task, duration) {
+        if (estimate > state.max) state.max = estimate;
+
+        function insertByEstimate(tasks, task, estimate) {
           for (let i = 0; i < tasks.length; i++) {
-            if (duration < tasks[i].duration) {
+            if (estimate < tasks[i].estimate) {
               tasks.splice(i, 0, task);
               return;
             }
           }
           tasks.push(task);
         }
-
-        if (duration > state.max) state.max = duration;
       },
 
       updateTaskText(task, text, state) {
         task.text = text;
+      },
+
+      startTask(task, state) {
+        task.running = true;
+        task.work = task.work || [];
+        task.work.push([new Date().getTime()]);
+      },
+
+      stopTask(task, state) {
+        const work = task.work[task.work.length - 1];
+        work[1] = new Date().getTime();
+        task.workDuration = (task.workDuration || 0) + (work[1] - work[0]) / 1000 / 60;
+        delete task.running;
+        if (task.workDuration > state.max) state.max = task.workDuration;
       },
 
       setTaskDone(task, checked, state) {
@@ -65,6 +93,8 @@ export default class Home extends Component {
         else {
           clearInterval(task.removalInterval);
         }
+
+        if (task.running) this.actions.stopTask.call(this, task)
       },
 
       removeTask(task, state) {
@@ -90,7 +120,7 @@ class TaskList extends Component {
   render({tasks, max, actions, actionBase}) {
     return (
       <task-list>
-        {tasks.map(t => <Task key={t.id} task={t} max={max} actions={actions} actionBase={actionBase} onClick={() => console.log(t)} />)}
+        {tasks.map(t => <Task key={t.id} task={t} max={max} actions={actions} actionBase={actionBase} />)}
       </task-list>
     );
   }
@@ -98,7 +128,7 @@ class TaskList extends Component {
 
 class TaskEntry extends Component {
   buttonClick(onEntry) {
-    onEntry(this.inputEl.value, parseFloat(this.durationEl.value));
+    onEntry(this.inputEl.value, parseFloat(this.estimateEl.value));
     this.inputEl.value = '';
     this.inputEl.focus();
   }
@@ -112,15 +142,15 @@ class TaskEntry extends Component {
       <task-entry>
         <task-input>
           <input type="text" ref={el => this.inputEl = el} placeholder="Enter task..." autofocus tabindex={0} onKeydown={this.inputKeydown.bind(this, onEntry)} />
-          <duration-input>
-            <input type="number" ref={el => this.durationEl = el} defaultValue={5} min={1} onKeydown={this.inputKeydown.bind(this, onEntry)} />
-            <select value="minute(s)">
+          <estimate-input>
+            <input type="number" ref={el => this.estimateEl = el} defaultValue={5} min={1} onKeydown={this.inputKeydown.bind(this, onEntry)} />
+            <select value="minute(s)" disabled>
               <option disabled>$$$ second(s) $$$</option>
               <option>minute(s)</option>
               <option disabled>$$$ hour(s) $$$</option>
               <option disabled>$$$ days(s) $$$</option>
             </select>
-          </duration-input>
+          </estimate-input>
         </task-input>
         <button onClick={this.buttonClick.bind(this, onEntry)}>+</button>
       </task-entry>
@@ -130,25 +160,32 @@ class TaskEntry extends Component {
 
 class Task extends Component {
   state = {
-    editMode: false
+    editMode: false,
+    workDuration: (this.props.task.workDuration || 0) + (this.props.task.work ? new Date().getTime() - this.props.task.work[this.props.task.work.length - 1][0] : 0) / 1000 / 60
   }
 
   toggleEditMode() {
     this.setState(({editMode}) => ({editMode: !editMode}));
   }
 
-  render({task, max, actions: {setTaskDone, updateTaskText}, actionBase}, {editMode}) {
-    const {text, duration, done} = task;
+  render({task, max, actions: {setTaskDone, updateTaskText, toggleTask}, actionBase}, {editMode}) {
+    const {text, estimate, done, work, workDuration, running} = task;
+
+    // if (work && work[work.length - 1].length === 1) this.interval = setInterval(this.updateWorkDuration.bind(this), 1000);
+    // else if (this.interval) clearInterval(this.interval);
+
     return (
-      <task className={done ? style['done'] : ''}>
-        <duration-bar style={{width: `${duration / max * 100}%`}}></duration-bar>
+      <task className={done ? style['done'] : ''} onClick={toggleTask.bind(actionBase, task)}>
+        <estimate-bar style={{width: `${estimate / max * 100}%`}}></estimate-bar>
+        <duration-bar style={{width: `${workDuration / max * 100}%`}}></duration-bar>
         <info-line>
-          <input type="checkbox" onChange={setTaskDone.bind(actionBase, task)} checked={done} />
+          <input type="checkbox" onChange={setTaskDone.bind(actionBase, task)} checked={done} onClick={event => event.stopPropagation()} />
           {editMode ?
               <input type="text" value={text} onBlur={event => updateTaskText.call(actionBase, task, event) & this.setState({editMode: false})} />
             : <task-text onClick={this.toggleEditMode.bind(this)}>{text}</task-text>
           }
-          <duration>{duration} minutes</duration>
+          <estimate>{estimate} minute(s)</estimate>
+          <status>{running ? 'running' : ''} {((workDuration || 0) / estimate * 100).toFixed(2)}%</status>
         </info-line>
       </task>
     );
