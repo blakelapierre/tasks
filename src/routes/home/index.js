@@ -127,19 +127,24 @@ class TaskList extends Component {
 }
 
 class TaskEntry extends Component {
-  buttonClick(onEntry) {
+  settingsButtonClick() {
+
+  }
+
+  addButtonClick(onEntry) {
     onEntry(this.inputEl.value, parseFloat(this.estimateEl.value));
     this.inputEl.value = '';
     this.inputEl.focus();
   }
 
   inputKeydown(onEntry, event) {
-    if (event.keyCode === 13) this.buttonClick(onEntry);
+    if (event.keyCode === 13) this.addButtonClick.call(this, onEntry);
   }
 
   render({onEntry}) {
     return (
       <task-entry>
+        <button onClick={this.settingsButtonClick.bind(this)}>|||</button>
         <task-input>
           <input type="text" ref={el => this.inputEl = el} placeholder="Enter task..." autofocus tabindex={0} onKeydown={this.inputKeydown.bind(this, onEntry)} />
           <estimate-input>
@@ -152,7 +157,7 @@ class TaskEntry extends Component {
             </select>
           </estimate-input>
         </task-input>
-        <button onClick={this.buttonClick.bind(this, onEntry)}>+</button>
+        <button onClick={this.addButtonClick.bind(this, onEntry)}>+</button>
       </task-entry>
     );
   }
