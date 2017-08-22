@@ -164,8 +164,9 @@ class Task extends Component {
     workDuration: (this.props.task.workDuration || 0) + (this.props.task.work ? new Date().getTime() - this.props.task.work[this.props.task.work.length - 1][0] : 0) / 1000 / 60
   }
 
-  toggleEditMode() {
+  toggleEditMode(event) {
     this.setState(({editMode}) => ({editMode: !editMode}));
+    event.stopPropagation();
   }
 
   render({task, max, actions: {setTaskDone, updateTaskText, toggleTask}, actionBase}, {editMode}) {
@@ -181,7 +182,7 @@ class Task extends Component {
         <info-line>
           <input type="checkbox" onChange={setTaskDone.bind(actionBase, task)} checked={done} onClick={event => event.stopPropagation()} />
           {editMode ?
-              <input type="text" value={text} onBlur={event => updateTaskText.call(actionBase, task, event) & this.setState({editMode: false})} />
+              <input type="text" value={text} onClick={event => event.stopPropagation()} onBlur={event => updateTaskText.call(actionBase, task, event) & this.setState({editMode: false})} />
             : <task-text onClick={this.toggleEditMode.bind(this)}>{text}</task-text>
           }
           <estimate>{estimate} minute(s)</estimate>
